@@ -14,13 +14,5 @@ class Shell:
 
         self.drag_coef = aerodyn_coef / weight
 
-    def get_param(self):
-        """
-
-        :return: returns the necessary Shell's object parameters
-            for further calculations
-        """
-        return self.velocity, self.drag_coef
-
 
 bolt = Shell(weight=110, velocity=900, aerodyn_coef=0.007)

@@ -83,7 +83,6 @@ class Railgun:
 
         self.beta = np.radians(beta)
         self.vec = np.array([m_vec, n_vec])
-        print(f'RA vec={self.vec}, a={self.alpha}')
 
     def fire(self, target):
         """

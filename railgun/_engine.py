@@ -30,8 +30,8 @@ def __func(t, y, k: float):
 
 
 # GlOBAL VARS
-ts = []
-ys = []
+TimeLine = []
+IntegrlVars = []
 FlightTime, Distance, Height = 0, 0, 0
 y4_old = 0
 
@@ -53,8 +53,8 @@ def __checker(t, y):
     :return: int
     """
     global FlightTime, Distance, Height, y4_old
-    ts.append(t)
-    ys.append(list(y.copy()))
+    TimeLine.append(t)
+    IntegrlVars.append(list(y.copy()))
     y1, y2, y3, y4 = y
 
     if y4*y4_old < 0:   # maximum point reached
@@ -96,25 +96,28 @@ def __calc_shot(beta, velocity0, drag_coef) -> [np.array, np.array]:
     ODE.set_f_params(drag_coef)  # passing an additional argument (drag_coef) to function f
     ODE.integrate(MAX_TIME)  # solving ODE
 
-    result = np.array(ys)
-    time_ = np.array(ts)
+    integrlVars = np.array(IntegrlVars)
+    timeLine = np.array(TimeLine)
+    distance = Distance
+    flightTime = FlightTime
+    height = Height
 
-    return result, time_, Distance, FlightTime, Height
+    return integrlVars, timeLine, distance, flightTime, height
 
 
-def __draw_plots(Y, ts, railgun, target, x_shell, y_shell):
+def __draw_plots(integrlVars, timeLine, railgun, target, shell_coords):
     # FIGURE 1 START
     figure1 = plt.figure("Trajectory and Speed vs time graphs")
     plot1 = plt.subplot2grid((2, 2), (0, 0), colspan=2)
     plot2 = plt.subplot2grid((2, 2), (1, 0), colspan=2)
 
     plot1.grid(True)
-    plot1.plot(Y[:, 0], Y[:, 2], linewidth=3, color='orange')
+    plot1.plot(integrlVars[:, 0], integrlVars[:, 2], linewidth=3, color='orange')
     plot1.set_title('Trajectory')
 
-    v = np.array([np.sqrt(y[1]**2 + y[3]**2) for y in Y])
+    v = np.array([np.sqrt(y[1]**2 + y[3]**2) for y in integrlVars])
     plot2.grid(True)
-    plot2.plot(ts, v, linewidth=3)
+    plot2.plot(timeLine, v, linewidth=3)
     plot2.set_title('Speed versus time graph')
 
     plt.tight_layout()
@@ -123,6 +126,7 @@ def __draw_plots(Y, ts, railgun, target, x_shell, y_shell):
     figure2 = plt.figure("F2")
     x_railgun = railgun.x_railgun
     y_railgun = railgun.y_railgun
+    x_shell, y_shell = shell_coords
 
     # m, n = railgun.vec
     plt.plot(x_railgun, y_railgun, marker='*', zorder=5, markersize=10)
@@ -144,9 +148,10 @@ def __draw_plots(Y, ts, railgun, target, x_shell, y_shell):
 
 def shoot(railgun, target):
     alpha = railgun.alpha
-    # print(f'EN a={alpha}')
     beta = railgun.beta
-    velocity0, drag_coef = railgun.shell.get_param()
+    velocity0 = railgun.shell.velocity
+    drag_coef = railgun.shell.drag_coef
+
     disp_a = 0
     disp_b = 0
     v_div = 1
@@ -158,24 +163,22 @@ def shoot(railgun, target):
 
     alpha += np.radians(disp_a)
     beta += np.radians(disp_b)
-    velocity0 += np.radians(v_div)
+    velocity0 *= v_div
 
-    Y, ts, Distance, FlightTime, Height = __calc_shot(beta, velocity0, drag_coef)
-    # print(f'EN2 a={alpha}')
-    x_shell = Distance * np.cos(alpha) + railgun.x_railgun
-    y_shell = Distance * np.sin(alpha) + railgun.y_railgun
+    integrlVars, timeLine, distance, flightTime, height = __calc_shot(beta, velocity0, drag_coef)
+    x_shell = distance * np.cos(alpha) + railgun.x_railgun
+    y_shell = distance * np.sin(alpha) + railgun.y_railgun
 
     is_hit = target.is_target_hit((x_shell, y_shell))
     is_hit_mess = 'Target is hit' if is_hit else 'Target is not hit'
 
-    __draw_plots(Y, ts, railgun, target, x_shell, y_shell)
+    __draw_plots(integrlVars, timeLine, railgun, target, (x_shell, y_shell))
 
     print(
         f'SHOOT RESULT:\n'
-        f'Flight time = {FlightTime}\n'
-        f'Distance = {Distance}\n'
-        f'Max height = {Height}\n'
+        f'Flight time = {flightTime}\n'
+        f'distance = {distance}\n'
+        f'Max height = {height}\n'
         f'\n'
         f'{is_hit_mess}\n'
-        # f'x={x_shell}, y={y_shell}, a={np.degrees(alpha)}'
     )
