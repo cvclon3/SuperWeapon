@@ -1,8 +1,9 @@
 import numpy as np
 from numpy import linalg
 
-from railgun._engine import shoot
 from railgun.shell import Shell
+from railgun._engine import shoot
+from railgun._engine2 import _calc_setup, _draw_plots
 
 
 class Railgun:
@@ -84,10 +85,31 @@ class Railgun:
         self.beta = np.radians(beta)
         self.vec = np.array([m_vec, n_vec])
 
-    def fire(self, target):
+    def shoot(self, target):
         """
-
+            e1 version
         :param target: selected Target object
         :return:
         """
         shoot(railgun=self, target=target)
+
+    def fire(self, target):
+        """
+            e2 version
+        :param target: selected Target object
+        :return:
+        """
+        data = _calc_setup(self)
+        is_hit = target.is_target_hit((data.x_shell, data.y_shell))
+        is_hit_mess = 'Target is hit' if is_hit else 'Target is not hit'
+
+        print(
+            f'SHOOT RESULT:\n'
+            f'Flight time = {data.FlightTime}\n'
+            f'distance = {data.Distance}\n'
+            f'Max height = {data.Height}\n'
+            f'\n'
+            f'{is_hit_mess}\n'
+        )
+
+        _draw_plots(railgun=self, target=target, odesol=data)

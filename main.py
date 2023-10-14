@@ -15,4 +15,5 @@ rg44.locate((1, -1, 0), (1, 1, 0), (1, 1))
 rg44.load(bolt44)
 rg44.rotate(-45, 30)
 
-rg44.fire(target=target)
+if __name__ == "__main__":
+    rg44.fire(target=target)
