@@ -11,9 +11,34 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 
 
-def __func(t, y, k: float):
+def __func2(t, y, k: float):
     """
-    The function of the right-hand sides of the ODE system
+        The function of the right-hand sides of the ODE system with the condition
+    that the resistance force of a moving projectile is proportional to the square
+    of its velocity with a coefficient k.
+    (has an additional argument k)
+
+    :param t: scipy.integrate.ode default argument, define as time, [s]
+    :param y: integration variable
+    :param k: drag coefficient, aerodynamic_coefficient / weight
+    :return: [float, float, float, float]
+    """
+    G = 9.81
+    y1, y2, y3, y4 = y
+
+    return [
+        y2,
+        -k * y2 * np.sqrt(y2 ** 2 + y4 ** 2),
+        y4,
+        -k * y4 * np.sqrt(y2 ** 2 + y4 ** 2) - G
+    ]
+
+
+def __func3(t, y, k: float):
+    """
+        The function of the right-hand sides of the ODE system with the condition
+    that the resistance force of a moving projectile is proportional to the cube
+    of its velocity with a coefficient k.
     (has an additional argument k)
 
     :param t: scipy.integrate.ode default argument, define as time, [s]
@@ -35,8 +60,7 @@ def __func(t, y, k: float):
 class ODESolution:
     """
         Transport class
-        Contains necessary value for further operation
-    after solving system of ODE
+        Contains necessary value for further operation after solving system of ODE
     """
     IntegrlVars = []
     TimeLine = []
@@ -50,7 +74,7 @@ class ODESolution:
 def _calc_setup(railgun):
     """
         Setup value for further calculating
-    :return:
+    :return: ODESolution
     """
     alpha = railgun.alpha
     beta = railgun.beta
@@ -82,7 +106,7 @@ START_TIME = 0
 NSTEPS = 50000
 MAX_STEP = 0.01
 
-ODE = ode(__func)
+ODE = ode(__func3)
 ODE.set_integrator(
     'dopri5',
     nsteps=NSTEPS,
@@ -96,7 +120,7 @@ def _calc(alpha, beta, velocity0, drag_coef):
     :param beta: y_railgun-axis angle in radians
     :param velocity0: starting speed of the Shell object
     :param drag_coef: drag coefficient, aerodynamic_coefficient / weight
-    :return: [np.array, np.array, float, float, float]
+    :return: ODESolution
     """
     init_conditional = [  # Initial Conditional
         0,  # x0
@@ -139,7 +163,7 @@ def _calc(alpha, beta, velocity0, drag_coef):
 def _draw_plots(railgun, target, odesol: ODESolution):
     """
         Drawing plots
-    :return:
+    :return: None
     """
     # FIGURE 1 START
     figure1 = plt.figure("Trajectory and Speed vs time graphs")

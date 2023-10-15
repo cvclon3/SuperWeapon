@@ -13,6 +13,3 @@ class Shell:
         self.aerodyn_coef = aerodyn_coef
 
         self.drag_coef = aerodyn_coef / weight
-
-
-bolt = Shell(weight=110, velocity=900, aerodyn_coef=0.007)

@@ -76,12 +76,10 @@ class Railgun:
         m_vec, n_vec = np.dot(rotation_mtx, self.vec)
 
         rad = np.arctan2(n_vec, m_vec)
-        self.alpha = np.degrees(rad)
-        if self.alpha < 0:
-            self.alpha += 360
+        if rad < 0:
+            rad += 2
 
-        self.alpha = np.radians(self.alpha)
-
+        self.alpha = rad
         self.beta = np.radians(beta)
         self.vec = np.array([m_vec, n_vec])
 
