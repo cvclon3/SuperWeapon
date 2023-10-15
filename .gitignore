@@ -1,4 +1,21 @@
+### IDE files ###
 .idea/
+
+### macOS ###
+# General
+.DS_Store
+railgun/.DS_Store
+.AppleDouble
+.LSOverride
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+railgun/__pycache__/
+*.py[cod]
+*$py.class
+
+
 
 m2.py
 not_main.py
