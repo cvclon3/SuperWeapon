@@ -1,12 +1,12 @@
 class Shell:
+    """Shell main class."""
 
-    def __init__(self, weight, velocity, aerodyn_coef):
+    def __init__(self, weight: float, velocity: float, aerodyn_coef: float):
         """
-
-        :param weight: weight of Shell object, [kg]
-        :param velocity: median velocity of Shell object, [m/s]
-        :param aerodyn_coef: aerodynamic coefficient (search necessary
-            tables and values in the Google)
+            Setup the initial parameters of the Shell object.
+        :param weight: weight of Shell object, [kg].
+        :param velocity: median velocity of Shell object, [m/s].
+        :param aerodyn_coef: aerodynamic coefficient (search for thenecessary tables and values on Google).
         """
         self.weight = weight
         self.velocity = velocity

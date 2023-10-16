@@ -1,11 +1,10 @@
 import pandas as pd
 
 from main import rg44, bolt44, target
-from railgun._engine2 import _calc_setup
 
 
 def line(railgun):
-    data = _calc_setup(railgun)
+    data = rg44._calc_setup()
 
     is_hit = target.is_target_hit((data.x_shell, data.y_shell))
 
@@ -18,13 +17,14 @@ def line(railgun):
         bolt44.weight,
         bolt44.drag_coef,
         data.x_shell,
-        data.y_shell, is_hit
+        data.y_shell,
+        is_hit
     ]
 
 
 dataset = []
 
-for i in range(10):
+for i in range(100):
     dataset.append(line(rg44))
 
 df = pd.DataFrame(data=dataset, columns=[
@@ -32,3 +32,4 @@ df = pd.DataFrame(data=dataset, columns=[
 ])
 
 print(df.to_string())
+df.to_csv('data.csv')

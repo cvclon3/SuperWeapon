@@ -2,49 +2,48 @@
 e2 engine
 
 Second version of engine for calculating math model of
-flight object in the field of gravity and air resistance
+flight object in the field of gravity and air resistance.
 """
 
 import numpy as np
-import numpy.random as rnd
 import matplotlib.pyplot as plt
 from scipy.integrate import ode
 
 
-def __func2(t, y, k: float):
+def __func2(t: float, y: list, k: float) -> list:
     """
         The function of the right-hand sides of the ODE system with the condition
     that the resistance force of a moving projectile is proportional to the square
     of its velocity with a coefficient k.
     (has an additional argument k)
 
-    :param t: scipy.integrate.ode default argument, define as time, [s]
-    :param y: integration variable
-    :param k: drag coefficient, aerodynamic_coefficient / weight
-    :return: [float, float, float, float]
+    :param t: scipy.integrate.ode default argument, define as time, [s].
+    :param y: integration variable.
+    :param k: drag coefficient, aerodynamic_coefficient / weight.
+    :return: list, that contains the values of the right-part of the system of ODE.
     """
     G = 9.81
     y1, y2, y3, y4 = y
 
     return [
-        y2,
-        -k * y2 * np.sqrt(y2 ** 2 + y4 ** 2),
-        y4,
-        -k * y4 * np.sqrt(y2 ** 2 + y4 ** 2) - G
+        y2,                                         # y1' = y2
+        -k * y2 * np.sqrt(y2 ** 2 + y4 ** 2),       # y2' = -k * y2 * sqrt(y2**2 + y4**2)
+        y4,                                         # y3' = y4
+        -k * y4 * np.sqrt(y2 ** 2 + y4 ** 2) - G    # y4' = -k * y2 * sqrt(y2**2 + y4**2) - G
     ]
 
 
-def __func3(t, y, k: float):
+def __func3(t: float, y: list, k: float) -> list:
     """
         The function of the right-hand sides of the ODE system with the condition
     that the resistance force of a moving projectile is proportional to the cube
     of its velocity with a coefficient k.
     (has an additional argument k)
 
-    :param t: scipy.integrate.ode default argument, define as time, [s]
-    :param y: integration variable
-    :param k: drag coefficient, aerodynamic_coefficient / weight
-    :return: [float, float, float, float]
+    :param t: scipy.integrate.ode default argument, define as time, [s].
+    :param y: integration variable.
+    :param k: drag coefficient, aerodynamic_coefficient / weight.
+    :return: list, that contains the values of the right-part of the system of ODE.
     """
     G = 9.81
     y1, y2, y3, y4 = y
@@ -59,68 +58,40 @@ def __func3(t, y, k: float):
 
 class ODESolution:
     """
-        Transport class
-        Contains necessary value for further operation after solving system of ODE
+        Transport class.
+        Contains necessary value for further operation after solving the system of ODE.
     """
-    IntegrlVars = []
-    TimeLine = []
-    FlightTime = 0
-    Distance = 0
-    Height = 0
+    IntegrlVars = []    # Contains the solution of the system of ODE
+    TimeLine = []       # Contains time intervals for each of the solutions of the system of ODE
+    FlightTime = 0      # Shell flight time
+    Distance = 0        # The distance covered by the Shell
+    Height = 0          # Maximum Shell altitude
 
-    x_shell = 0
-    y_shell = 0
-
-def _calc_setup(railgun):
-    """
-        Setup value for further calculating
-    :return: ODESolution
-    """
-    alpha = railgun.alpha
-    beta = railgun.beta
-    velocity0 = railgun.shell.velocity
-    drag_coef = railgun.shell.drag_coef
-
-    disp_a = 0
-    disp_b = 0
-    v_div = 1
-
-    if railgun.is_specs:
-        disp_a = rnd.uniform(-railgun.disp, railgun.disp)
-        disp_b = rnd.uniform(-railgun.disp, railgun.disp)
-        v_div = rnd.uniform(1 - railgun.v_div, 1 + railgun.v_div)
-
-    alpha += np.radians(disp_a)
-    beta += np.radians(disp_b)
-    velocity0 *= v_div
-
-    data = _calc(alpha, beta, velocity0, drag_coef)
-    data.x_shell += railgun.x_railgun
-    data.y_shell += railgun.y_railgun
-
-    return data
+    x_shell = 0         # x coordinate of the Shell impact point
+    y_shell = 0         # y coordinate of the Shell impact point
 
 
-# CONFIG
-START_TIME = 0
 NSTEPS = 50000
-MAX_STEP = 0.01
 
 ODE = ode(__func3)
-ODE.set_integrator(
-    'dopri5',
-    nsteps=NSTEPS,
-    max_step=MAX_STEP
-)
+ODE.set_integrator('dopri5', nsteps=NSTEPS)
 
 
-def _calc(alpha, beta, velocity0, drag_coef):
+def _calc(alpha: float,
+          beta: float,
+          velocity0: float,
+          drag_coef: float,
+          start_time: float = 0,
+          step: float = 0.01
+          ) -> ODESolution:
     """
-
-    :param beta: y_railgun-axis angle in radians
-    :param velocity0: starting speed of the Shell object
-    :param drag_coef: drag coefficient, aerodynamic_coefficient / weight
-    :return: ODESolution
+        Calculate shoot.
+    :param beta: y_railgun-axis angle in radians.
+    :param velocity0: starting speed of the Shell object.
+    :param drag_coef: drag coefficient, aerodynamic_coefficient / weight.
+    :param start_time: initial time value.
+    :param step: integration step.
+    :return: ODESolution.
     """
     init_conditional = [  # Initial Conditional
         0,  # x0
@@ -129,8 +100,8 @@ def _calc(alpha, beta, velocity0, drag_coef):
         velocity0 * np.sin(beta)   # Vy
     ]
 
-    ODE.set_initial_value(init_conditional, START_TIME)  # setup initial values
-    ODE.set_f_params(drag_coef)  # passing an additional argument (drag_coef) to function f
+    ODE.set_initial_value(init_conditional, start_time)  # Setup initial values
+    ODE.set_f_params(drag_coef)  # Passing an additional argument (drag_coef) to function f
 
     data = ODESolution()
 
@@ -140,66 +111,74 @@ def _calc(alpha, beta, velocity0, drag_coef):
         data.TimeLine.append(ODE.t)
         y1, y2, y3, y4 = ODE.y
 
-        if y4 * y4_old < 0:  # maximum point reached
+        if y4 * y4_old < 0:  # Maximum point reached
             data.Height = y3
 
-        if y4 < 0 and y3 <= 0.0:  # the Shell has reached the surface
+        if y4 < 0 and y3 <= 0.0:  # The Shell has reached the surface
             data.FlightTime = ODE.t
             data.Distance = y1
             break
 
         y4_old = y4
-        ODE.integrate(ODE.t + MAX_STEP)  # solving ODE
+        ODE.integrate(ODE.t + step)  # Integrate next step
 
     data.IntegrlVars = np.array(data.IntegrlVars)
     data.TimeLine = np.array(data.TimeLine)
 
-    data.x_shell = data.Distance * np.cos(alpha)
-    data.y_shell = data.Distance * np.sin(alpha)
+    data.x_shell = data.Distance * np.cos(alpha)    # Calculate the x coordinate of the Shell impact point
+    data.y_shell = data.Distance * np.sin(alpha)    # Calculate the y coordinate of the Shell impact point
 
     return data
 
 
-def _draw_plots(railgun, target, odesol: ODESolution):
+def _draw_plots(railgun_coords: tuple, target_coords: tuple, odesol: ODESolution) -> None:
     """
-        Drawing plots
-    :return: None
+        Drawing plots:
+    1) Trajectory and Speed vs time graphs;
+    2) Illustration.
+    :param railgun_coords: Get Railgun object coordinates.
+    :param target_coords: Get coordinates of the nodes of the Target object.
+    :param odesol: Get an ODESolution object with necessary data.
+    :return: None.
     """
-    # FIGURE 1 START
+    ### First plot ###
     figure1 = plt.figure("Trajectory and Speed vs time graphs")
-    plot1 = plt.subplot2grid((2, 2), (0, 0), colspan=2)
-    plot2 = plt.subplot2grid((2, 2), (1, 0), colspan=2)
+    plot1 = plt.subplot2grid((2, 2), (0, 0), colspan=2)  # Initialize first plot
+    plot2 = plt.subplot2grid((2, 2), (1, 0), colspan=2)  # Initialize second plot
 
     plot1.grid(True)
+    # Draw the trajectory of the Shell
     plot1.plot(odesol.IntegrlVars[:, 0], odesol.IntegrlVars[:, 2], linewidth=3, color='orange')
     plot1.set_title('Trajectory')
 
     v = np.array([np.sqrt(y[1] ** 2 + y[3] ** 2) for y in odesol.IntegrlVars])
     plot2.grid(True)
-    plot2.plot(odesol.TimeLine, v, linewidth=3)
+    # Draw speed vs time plot
+    plot2.plot(odesol.TimeLine, v, linewidth=3, color='tab:blue')
     plot2.set_title('Speed versus time graph')
 
     plt.tight_layout()
 
-    # FIGURE 2 START
-    figure2 = plt.figure("F2")
-    x_railgun = railgun.x_railgun
-    y_railgun = railgun.y_railgun
+    ### Second plot ###
+    figure2 = plt.figure("Illustration")
+    x_railgun, y_railgun = railgun_coords
     x_shell, y_shell = odesol.x_shell, odesol.y_shell
 
-    # m, n = railgun.vec
-    plt.plot(x_railgun, y_railgun, marker='*', zorder=5, markersize=10)
+    # Draw the position of the Railgun
+    plt.plot(x_railgun, y_railgun, marker='*', zorder=5, markersize=10, color='blue')
+    # Draw the trajectory of the Shell
     plt.plot((x_railgun, x_shell), (y_railgun, y_shell), linewidth=1, color='black')
-    # plt.quiver(railgun.x_railgun, railgun.y_railgun, m, n, color='b', units='xy', scale=0.01)
 
-    x_target = target.x_target
+    x_target, y_target = target_coords
     x_target.append(x_target[0])
-    y_target = target.y_target
     y_target.append(y_target[0])
 
-    plt.plot(x_target, y_target, linewidth=2)
-    plt.plot(x_shell, y_shell, marker='o', color='r')
-    plt.title('Map')
+    # Draw the Target
+    plt.plot(x_target, y_target, linewidth=2, color='orange')
+    # Draw the Shell impact point
+    plt.plot(x_shell, y_shell, marker='o', zorder=5, markersize=10, color='red')
+    plt.title('Illustration')
 
     plt.grid(True)
+    # Show plots
     plt.show()

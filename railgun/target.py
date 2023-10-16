@@ -1,27 +1,26 @@
 class Target:
+    """Target main class."""
 
-    def __init__(self, *coordinates):
+    def __init__(self, *coordinates: [tuple]):
         """
-
-        :param coordinates: set N-tuples -
-            coordinates of the vertices of the target polygon
+            Set coordinates for current Target object.
+        :param coordinates: set N-tuples - coordinates of the vertices of the target polygon.
         """
         self.coordinates = coordinates  # [(x1, y1), ... , (xn, yn)]
-        self.x_target = [x for x, y in self.coordinates]
+        self.x_target = [x for x, y in self.coordinates]  # Get x coordinates of the Target nodes
         self.y_target = [y for x, y in self.coordinates]
 
-    def is_target_hit(self, coordinates):
+    def is_target_hit(self, coordinates: tuple) -> bool:
         """
-        Original code:
+            Original code:
             https://ru.wikibooks.org/wiki/Реализации_алгоритмов/Задача_о_принадлежности_точки_многоугольнику
-
-        :param coordinates: set tuple (x_shell, y_shell) - impact point coordinates
-        :return: bool
+        :param coordinates: set tuple (x_shell, y_shell) - impact point coordinates.
+        :return: bool.
         """
         x_shell = coordinates[0]
         y_shell = coordinates[1]
 
-        npol = len(self.x_target)
+        npol = len(self.x_target)  # Get the number of nodes of the current Target object
         is_hit = False
 
         i = 0
